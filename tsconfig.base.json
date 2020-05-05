@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"baseUrl": "./",
+		"declaration": false,
+		"lib": ["es2015", "es2016"],
+		"newLine": "LF",
+		"noEmitOnError": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"outDir": "./lib",
+		"rootDir": "./",
+		"strict": true,
+		"target": "es5",
+		"types": []
+	}
+}

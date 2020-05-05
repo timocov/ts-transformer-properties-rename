@@ -11,3 +11,4 @@ package-lock.json
 package-lock.json.*
 
 !.mocharc.js
+!tests/test-cases/**/output.js
