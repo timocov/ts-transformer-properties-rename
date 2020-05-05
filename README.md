@@ -15,6 +15,8 @@ I would say **check the whole project file-by-file** and compare the input with 
 
 I cannot guarantee you that the transformer covers all possible cases, but it has tests for the most popular ones, and if you catch a bug - please feel free to create an issue.
 
+Also, it might not work as expected with composite projects, because the project should contain an entry points you set in options, but it might be in other sub-project.
+
 ## How it works
 
 For every property the tool tries to understand whether a property is accessible from entry points you specified in the [options](#options).

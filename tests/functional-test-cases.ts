@@ -88,6 +88,7 @@ describe('Functional tests', () => {
 					entrySourceFiles: [testCase.inputFileName],
 					privatePrefix: '_private_',
 					internalPrefix: '_internal_',
+					publicJSDocTag: 'public',
 				}
 			);
 

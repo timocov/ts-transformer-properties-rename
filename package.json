@@ -43,6 +43,7 @@
   "scripts": {
     "clean": "rimraf lib/ dist/",
     "build": "tsc -p .",
-    "lint": "tslint --config tslint.json --project tsconfig.json"
+    "lint": "tslint --config tslint.json --project tsconfig.json",
+    "test": "mocha tests/functional-test-cases.ts"
   }
 }
