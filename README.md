@@ -21,6 +21,11 @@ I cannot guarantee you that the transformer covers all possible cases, but it ha
 
 Also, it might not work as expected with composite projects, because the project should contain an entry points you set in options, but it might be in other sub-project.
 
+## Installation
+
+1. Install the package `npm i -D ts-transformer-properties-rename`
+1. Add transformer with [one of possible ways](#how-to-use-the-custom-transformer)
+
 ## How it works
 
 For every property the tool tries to understand whether a property is accessible from entry points you specified in the [options](#options).
