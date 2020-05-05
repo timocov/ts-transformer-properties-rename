@@ -1,5 +1,9 @@
 # ts-transformer-properties-rename
 
+[![GH Actions][ci-img]][ci-link]
+[![npm version][npm-version-img]][npm-link]
+[![Downloads][npm-downloads-img]][npm-link]
+
 A TypeScript custom transformer which renames all properties if they aren't exported from entry point (in any way) and imported from external package.
 
 It might help you better minify your bundles with any existing minifier/uglify tool which supports properties mangling.
@@ -169,3 +173,10 @@ terser({
 ```
 
 I think other tools has the similar configuration and you can easily find out how to set it up in your environment.
+
+[ci-img]: https://github.com/timocov/ts-transformer-properties-rename/workflows/CI%20Test/badge.svg?branch=master
+[ci-link]: https://github.com/timocov/ts-transformer-properties-rename/actions?query=branch%3Amaster
+
+[npm-version-img]: https://badge.fury.io/js/ts-transformer-properties-rename.svg
+[npm-downloads-img]: https://img.shields.io/npm/dm/ts-transformer-properties-rename.svg
+[npm-link]: https://www.npmjs.com/package/ts-transformer-properties-rename
