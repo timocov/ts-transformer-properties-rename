@@ -8,10 +8,10 @@ A TypeScript custom transformer which reduces bundle size (with a help of other 
 
 ```typescript
 function showMessage(opts: { message: string }): void {
-	alert(opts.message);
+    alert(opts.message);
 }
 export function alertMessage(message: string): void {
-	showMessage({ message });
+    showMessage({ message });
 }
 ```
 
