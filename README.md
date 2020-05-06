@@ -4,12 +4,19 @@
 [![npm version][npm-version-img]][npm-link]
 [![Downloads][npm-downloads-img]][npm-link]
 
-A TypeScript custom transformer which renames all properties if they aren't exported from entry point (in any way) and imported from external package.
+A TypeScript custom transformer which helps you achieve reducing your JS bundles by renaming properties aren't exposed to the public.
 
-It might help you better minify your bundles with any existing minifier/uglify tool which supports properties mangling.
+You might find the approach pretty similar to how Google Closure Compiler with enabled advanced optimizations works,
+but you don't need to refactor your project a lot to make it works for Google Closure Compiler (setting up [tsickle](https://github.com/angular/tsickle) might be hard as well).
 
-This is the next generation of [ts-transformer-minify-privates](https://github.com/timocov/ts-transformer-minify-privates) (which allows you rename the only private class' members),
-which uses some approaches from [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator) to detect whether some property is accessible via entry points somehow.
+All you need to take all advantages from this tool are:
+
+1. [Install it](#installation)
+1. [Setup your compiler to use it](#how-to-use-the-custom-transformer)
+1. [Setup the tool you use to minify/uglify to mangle properties](#how-to-minify-properties)
+
+_This is the next generation of [ts-transformer-minify-privates](https://github.com/timocov/ts-transformer-minify-privates) (which allows you rename the only private class' members),_
+_which uses some approaches from [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator) to detect whether some property is accessible via entry points somehow._
 
 ## Caution!!!
 
@@ -20,6 +27,15 @@ I would say **check the whole project file-by-file** and compare the input with 
 I cannot guarantee you that the transformer covers all possible cases, but it has tests for the most popular ones, and if you catch a bug - please feel free to create an issue.
 
 Also, it might not work as expected with composite projects, because the project should contain an entry points you set in options, but it might be in other sub-project.
+
+## How it works
+
+For every property the tool tries to determine whether a property is accessible from entry points you specified in the [options](#entrysourcefiles).
+
+The property is "accessible from entry point" if the type where this property is declared (including all base classes/interfaces) is directly exported or accessible via entry point
+(this approach and algorithms are taken from <https://github.com/timocov/dts-bundle-generator>).
+
+If you rely on duck typing a lot in your project - the tool **MIGHT NOT** and quite possible **WILL NOT** work properly, especially it can't detect if the property is exported (because it uses the only explicit "inheritance/usage tree").
 
 ## Example
 
@@ -46,8 +62,6 @@ export function getOptions(fooBar: number): Options {
 After applying this transformer you'll get the next result:
 
 ```javascript
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 function getOptions(fooBar) {
     var result = { fooBar: fooBar };
     var internalOptions = { _internal_fooBar: fooBar };
@@ -95,8 +109,6 @@ Here we can a class `Class` which implements an interface `Interface` and a fact
 After processing you'll get the next result:
 
 ```javascript
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 var Class = /** @class */ (function () {
     function Class() {
         this.publicProperty = 123;
@@ -132,15 +144,6 @@ More examples you can see [in test-cases folder](https://github.com/timocov/ts-t
 
 1. Install the package `npm i -D ts-transformer-properties-rename`
 1. Add transformer with [one of possible ways](#how-to-use-the-custom-transformer)
-
-## How it works
-
-For every property the tool tries to understand whether a property is accessible from entry points you specified in the [options](#options).
-
-The property is "accessible from entry point" if the type where this property is declared (including all base classes/interfaces) is directly exported or accessible via entry point
-(this approach and algorithms are taken from <https://github.com/timocov/dts-bundle-generator>).
-
-If you use duck typing a lot in your project - the tool **WILL NOT work properly**, especially it can't detect if the property is exported (because it uses the only inheritance tree).
 
 ## Options
 
