@@ -4,7 +4,7 @@
 [![npm version][npm-version-img]][npm-link]
 [![Downloads][npm-downloads-img]][npm-link]
 
-A TypeScript custom transformer which reduces bundle size (with a help of other tools in your bundler - see below) by renaming properties aren't exposed to the public:
+A TypeScript custom transformer which reduces bundle size (with a help of other tools in your bundler - [see below](#how-to-minify-properties)) by renaming properties aren't exposed to the public:
 
 ```typescript
 function showMessage(opts: { message: string }): void {
@@ -19,15 +19,13 @@ goes to:
 
 ```javascript
 function showMessage(opts) {
-    alert(opts._internal_message);
+    alert(opts._internal_message); // `_internal_message` will be like just `s` after terser/uglify
 }
 function alertMessage(message) {
-    showMessage({ _internal_message: message });
+    showMessage({ _internal_message: message }); // `_internal_message` will be like just `s` after terser/uglify
 }
 exports.alertMessage = alertMessage;
 ```
-
-_(note that terser/uglify/any other minifier [will rename `_internal_message` property](#how-to-minify-properties) to something like just `s`)_
 
 You might find the approach pretty similar to how Google Closure Compiler with enabled advanced optimizations works,
 but you don't need to refactor your project a lot to make it works for Google Closure Compiler (setting up [tsickle](https://github.com/angular/tsickle) might be hard as well).
