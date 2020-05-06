@@ -21,6 +21,113 @@ I cannot guarantee you that the transformer covers all possible cases, but it ha
 
 Also, it might not work as expected with composite projects, because the project should contain an entry points you set in options, but it might be in other sub-project.
 
+## Example
+
+Let's say we have the following source code in entry point:
+
+```typescript
+// yeah, it's especially without the `export` keyword here
+interface Options {
+    fooBar: number;
+}
+
+interface InternalInterface {
+    fooBar: number;
+}
+
+export function getOptions(fooBar: number): Options {
+    const result: Options = { fooBar };
+    const internalOptions: InternalInterface = { fooBar };
+    console.log(internalOptions.fooBar);
+    return result;
+}
+```
+
+After applying this transformer you'll get the next result:
+
+```javascript
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+function getOptions(fooBar) {
+    var result = { fooBar: fooBar };
+    var internalOptions = { _internal_fooBar: fooBar };
+    console.log(internalOptions._internal_fooBar);
+    return result;
+}
+exports.getOptions = getOptions;
+```
+
+Even if both `Options` and `InternalInterface` have the same property `fooBar`, the only `InternalInterface`'s `fooBar` has been renamed into `_internal_fooBar`.
+That's done because this interface isn't exported from the entry point (and even isn't used in exports' types), so it isn't used anywhere outside and could be safely renamed (within all it's properties).
+
+## Example 2
+
+Let's see more tricky example with classes and interfaces. Let's say we have the following code:
+
+```typescript
+export interface Interface {
+    publicMethod(opts: Options, b: number): void;
+    publicProperty: number;
+}
+
+export interface Options {
+    prop: number;
+}
+
+class Class implements Interface {
+    public publicProperty: number = 123;
+
+    public publicMethod(opts: Partial<Options>): void {
+        console.log(opts.prop, this.publicProperty);
+        this.anotherPublicMethod();
+    }
+
+    public anotherPublicMethod(): void {}
+}
+
+export function interfaceFactory(): Interface {
+    return new Class();
+}
+```
+
+Here we can a class `Class` which implements an interface `Interface` and a factory, which creates a class and returns it as `Interface`.
+
+After processing you'll get the next result:
+
+```javascript
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var Class = /** @class */ (function () {
+    function Class() {
+        this.publicProperty = 123;
+    }
+    Class.prototype.publicMethod = function (opts) {
+        console.log(opts.prop, this.publicProperty);
+        this._internal_anotherPublicMethod();
+    };
+    Class.prototype._internal_anotherPublicMethod = function () { };
+    return Class;
+}());
+function interfaceFactory() {
+    return new Class();
+}
+exports.interfaceFactory = interfaceFactory;
+```
+
+Here we have some interesting results:
+
+1. `publicProperty`, declared in `Interface` interface and implemented in `Class` class hasn't been renamed,
+    because it's accessible from an object, returned from `interfaceFactory` function.
+
+1. `publicMethod` hasn't been renamed as well the same as `publicProperty`.
+
+1. `prop` from `Options` interface also hasn't been renamed as soon it's part of "public API" of the module.
+
+1. `anotherPublicMethod` (and all calls) has been renamed into `_internal_anotherPublicMethod`,
+    because it isn't declared in `Interface` and cannot be accessible from an object, returned from `interfaceFactory` publicly (TypeScript didn't even generate types for that!).
+
+More examples you can see [in test-cases folder](https://github.com/timocov/ts-transformer-properties-rename/tree/master/tests/test-cases/).
+
 ## Installation
 
 1. Install the package `npm i -D ts-transformer-properties-rename`
@@ -113,7 +220,7 @@ module.exports = {
         options: {
           getCustomTransformers: program => ({
               before: [
-                  propertiesRenameTransformer(program)
+                  propertiesRenameTransformer(program, { entrySourceFiles: ['./src/index.ts'] })
               ]
           })
         }
@@ -135,7 +242,7 @@ export default {
   // ...
   plugins: [
     typescript({ transformers: [service => ({
-      before: [ propertiesRenameTransformer(service.getProgram()) ],
+      before: [ propertiesRenameTransformer(service.getProgram(), { entrySourceFiles: ['./src/index.ts'] }) ],
       after: []
     })] })
   ]
@@ -153,7 +260,7 @@ See [ttypescript's README](https://github.com/cevek/ttypescript/blob/master/READ
   "compilerOptions": {
     // ...
     "plugins": [
-      { "transform": "ts-transformer-properties-rename" }
+      { "transform": "ts-transformer-properties-rename", "entrySourceFiles": ["./src/index.ts"] }
     ]
   },
   // ...
