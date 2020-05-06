@@ -4,7 +4,30 @@
 [![npm version][npm-version-img]][npm-link]
 [![Downloads][npm-downloads-img]][npm-link]
 
-A TypeScript custom transformer which helps you achieve reducing your JS bundles by renaming properties aren't exposed to the public.
+A TypeScript custom transformer which reduces bundle size (with a help of other tools in your bundler - see below) by renaming properties aren't exposed to the public:
+
+```typescript
+function showMessage(opts: { message: string }): void {
+	alert(opts.message);
+}
+export function alertMessage(message: string): void {
+	showMessage({ message });
+}
+```
+
+goes to:
+
+```javascript
+function showMessage(opts) {
+    alert(opts._internal_message);
+}
+function alertMessage(message) {
+    showMessage({ _internal_message: message });
+}
+exports.alertMessage = alertMessage;
+```
+
+_(note that terser/uglify/any other minifier [will rename `_internal_message` property](#how-to-minify-properties) to something like just `s`)_
 
 You might find the approach pretty similar to how Google Closure Compiler with enabled advanced optimizations works,
 but you don't need to refactor your project a lot to make it works for Google Closure Compiler (setting up [tsickle](https://github.com/angular/tsickle) might be hard as well).
@@ -18,15 +41,17 @@ All you need to take all advantages from this tool are:
 _This is the next generation of [ts-transformer-minify-privates](https://github.com/timocov/ts-transformer-minify-privates) (which allows you rename the only private class' members),_
 _which uses some approaches from [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator) to detect whether some property is accessible via entry points somehow._
 
-## Caution!!!
+## How safe renames are
 
-Before start using this transformer in the production, I strongly recommend you check that your code compiles successfully and all files has correct output.
+As you might know that you have to pay for everything. The tool was tested on several packages and shows really good results (renames was 100% safe for them), but it doesn't mean that it's 100% safe for your project.
 
-I would say **check the whole project file-by-file** and compare the input with the (expected) output.
+If you rely a lot on duck typing (especially around public level/exports) - it _might_ break your code. But in any way to fix almost all issues I think you can just specify the correct type.
+
+I'd suggest everybody who wants to use it in production 1) run all tests you have 2) if it's possible - look at several (or all of them) compiled files in your project and see whether it's good or not.
 
 I cannot guarantee you that the transformer covers all possible cases, but it has tests for the most popular ones, and if you catch a bug - please feel free to create an issue.
 
-Also, it might not work as expected with composite projects, because the project should contain an entry points you set in options, but it might be in other sub-project.
+Also, it might not work as expected with composite projects, because the project should contain an entry points you set in [options](#entrysourcefiles), but it might be in other sub-project. So I'd suggest to test it in non-composite project.
 
 ## How it works
 
