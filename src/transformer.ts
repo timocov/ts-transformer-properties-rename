@@ -249,6 +249,14 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 		// tslint:disable-next-line:cyclomatic-complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
+			if (type.flags & ts.TypeFlags.Object) {
+				const objectType = type as ts.ObjectType;
+				// treat any tuple property as "external"
+				if (objectType.objectFlags & ts.ObjectFlags.Tuple) {
+					return true;
+				}
+			}
+
 			if (type.isUnionOrIntersection()) {
 				const hasExternalSubType = type.types.some((t: ts.Type) => isTypePropertyExternal(t, typePropertyName));
 				if (hasExternalSubType) {
