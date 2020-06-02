@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "ts-transformer-properties-rename",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A TypeScript custom transformer which renames internal properties of the project",
   "main": "dist/transformer.js",
   "repository": {
