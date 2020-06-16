@@ -87,6 +87,11 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return handleShorthandObjectBindingElement(node);
 			}
 
+			// 'node' in obj
+			if (ts.isStringLiteral(node) && ts.isBinaryExpression(node.parent) && node.parent.operatorToken.kind === ts.SyntaxKind.InKeyword) {
+				return handleInKeyword(node);
+			}
+
 			if (ts.isIdentifier(node) && node.parent) {
 				// obj.node
 				if (ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) {
@@ -131,6 +136,21 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			return node;
 		}
 
+		function handleInKeyword(node: ts.StringLiteral): ts.StringLiteral {
+			const parent = node.parent as ts.BinaryExpression;
+			const nodeType = typeChecker.getTypeAtLocation(node);
+			if (!nodeType.isStringLiteral()) {
+				throw new Error(`Can't get type for left expression in ${node.parent.getText()}`);
+			}
+
+			const propertyName = nodeType.value;
+			if (isTypePropertyExternal(typeChecker.getTypeAtLocation(parent.right), propertyName)) {
+				return node;
+			}
+
+			return createNewNode(propertyName, VisibilityType.Internal, ts.createStringLiteral);
+		}
+
 		// obj.node
 		function handlePropertyAccessIdentifier(node: ts.Identifier): ts.Identifier {
 			return createNewIdentifier(node);
@@ -143,7 +163,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return node;
 			}
 
-			return createNewNode(node, visibilityType, ts.createStringLiteral);
+			return createNewNodeFromProperty(node, visibilityType, ts.createStringLiteral);
 		}
 
 		// private node
@@ -169,7 +189,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return node;
 			}
 
-			return createNewNode(node.name, visibilityType, (newName: string) => {
+			return createNewNodeFromProperty(node.name, visibilityType, (newName: string) => {
 				return ts.createPropertyAssignment(newName, node.name);
 			});
 		}
@@ -185,7 +205,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return node;
 			}
 
-			return createNewNode(node.name, visibilityType, (newName: string) => {
+			return createNewNodeFromProperty(node.name, visibilityType, (newName: string) => {
 				return ts.createBindingElement(node.dotDotDotToken, newName, node.name, node.initializer);
 			});
 		}
@@ -203,10 +223,10 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return oldIdentifier;
 			}
 
-			return createNewNode(oldIdentifier, visibilityType, ts.createIdentifier);
+			return createNewNodeFromProperty(oldIdentifier, visibilityType, ts.createIdentifier);
 		}
 
-		function createNewNode<T extends ts.Node>(oldProperty: ts.PropertyName, type: VisibilityType, createNode: (newName: string) => T): T {
+		function createNewNodeFromProperty<T extends ts.Node>(oldProperty: ts.PropertyName, type: VisibilityType, createNode: (newName: string) => T): T {
 			const symbol = typeChecker.getSymbolAtLocation(oldProperty);
 			if (symbol === undefined) {
 				throw new Error(`Cannot get symbol for node "${oldProperty.getText()}"`);
@@ -214,10 +234,12 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 			const oldPropertyName = symbol.escapedName as string;
 
-			const newPropertyName = getNewName(oldPropertyName, type);
-			const newProperty = createNode(newPropertyName);
+			return createNewNode(oldPropertyName, type, createNode);
+		}
 
-			return newProperty;
+		function createNewNode<T extends ts.Node>(oldPropertyName: string, type: VisibilityType, createNode: (newName: string) => T): T {
+			const newPropertyName = getNewName(oldPropertyName, type);
+			return createNode(newPropertyName);
 		}
 
 		function getNewName(originalName: string, type: VisibilityType): string {
