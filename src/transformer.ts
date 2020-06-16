@@ -264,13 +264,6 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				}
 			}
 
-			if (type.aliasTypeArguments !== undefined) {
-				const hasExternalSubType = type.aliasTypeArguments.some((t: ts.Type) => isTypePropertyExternal(t, typePropertyName));
-				if (hasExternalSubType) {
-					return hasExternalSubType;
-				}
-			}
-
 			const symbol = type.getSymbol();
 			if (symbol !== undefined) {
 				const declarations = getDeclarationsForSymbol(symbol);
