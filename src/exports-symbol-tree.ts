@@ -51,6 +51,21 @@ export class ExportsSymbolTree {
 	}
 
 	private computeTreeForChildren(targetSymbolsSet: Set<ts.Symbol>, node: ts.Node, visitedSymbols: Set<ts.Symbol>): void {
+		// it's similar to handling ts.Block node - both Block and variable's initializer are part of _implementation_
+		// and we don't care about that implementation at all - we just only need to worry it's definition
+		// for functions it is arguments and return type
+		// for variables - the type of a variable
+		if (ts.isVariableDeclaration(node)) {
+			const typeChecker = this.program.getTypeChecker();
+			const variableType = typeChecker.getTypeAtLocation(node);
+			const variableTypeSymbol = variableType.getSymbol();
+			if (variableTypeSymbol !== undefined) {
+				targetSymbolsSet.add(variableTypeSymbol);
+			}
+
+			return;
+		}
+
 		ts.forEachChild(node, (childNode: ts.Node) => this.computeTreeForNode(targetSymbolsSet, childNode, visitedSymbols));
 	}
 

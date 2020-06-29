@@ -8,7 +8,5 @@ class TestProperties {
 const test1 = new TestProperties();
 test1.salad = 0;
 test1.dressing = 0;
-const totalSalad = test1.salad + 1;
-const totalDressing = test1.dressing + 0;
-
-export const temp = 1;
+export const totalSalad = test1.salad + 1;
+export const totalDressing = test1.dressing + 0;
