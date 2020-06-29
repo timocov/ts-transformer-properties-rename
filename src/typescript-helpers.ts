@@ -101,10 +101,14 @@ export function getExportsForSourceFile(typeChecker: ts.TypeChecker, sourceFileS
 	return result.map((symbol: ts.Symbol) => getActualSymbol(symbol, typeChecker));
 }
 
-export type ClassMember = ts.MethodDeclaration | ts.PropertyDeclaration;
+export type ClassMember =
+	| ts.MethodDeclaration
+	| ts.PropertyDeclaration
+	| ts.GetAccessorDeclaration
+	| ts.SetAccessorDeclaration;
 
 export function isClassMember(node: ts.Node): node is ClassMember {
-	return ts.isMethodDeclaration(node) || ts.isPropertyDeclaration(node);
+	return ts.isMethodDeclaration(node) || ts.isPropertyDeclaration(node) || ts.isGetAccessor(node) || ts.isSetAccessor(node);
 }
 
 export function hasPrivateKeyword(node: ClassMember | ts.ParameterDeclaration): boolean {
