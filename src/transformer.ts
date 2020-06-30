@@ -54,6 +54,12 @@ const defaultOptions: RenameOptions = {
 	publicJSDocTag: 'public',
 };
 
+const enum VisibilityType {
+	Internal,
+	Private,
+	External,
+}
+
 // tslint:disable-next-line:no-default-export
 export default function propertiesRenameTransformer(program: ts.Program, config?: Partial<RenameOptions>): ts.TransformerFactory<ts.SourceFile> {
 	return createTransformerFactory(program, config);
@@ -63,6 +69,13 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 	const fullOptions: RenameOptions = { ...defaultOptions, ...options };
 	const typeChecker = program.getTypeChecker();
 	const exportsSymbolTree = new ExportsSymbolTree(program, fullOptions.entrySourceFiles);
+
+	const cache = new Map<ts.Symbol, VisibilityType>();
+
+	function putToCache(nodeSymbol: ts.Symbol, val: VisibilityType): VisibilityType {
+		cache.set(nodeSymbol, val);
+		return val;
+	}
 
 	return (context: ts.TransformationContext) => {
 		function transformNodeAndChildren(node: ts.SourceFile, context: ts.TransformationContext): ts.SourceFile;
@@ -263,12 +276,6 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			return getActualSymbol(symbol);
 		}
 
-		const enum VisibilityType {
-			Internal,
-			Private,
-			External,
-		}
-
 		// tslint:disable-next-line:cyclomatic-complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
 			if (type.flags & ts.TypeFlags.Object) {
@@ -375,18 +382,23 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 		function getSymbolVisibilityType(nodeSymbol: ts.Symbol): VisibilityType {
 			nodeSymbol = getActualSymbol(nodeSymbol);
 
+			const cachedValue = cache.get(nodeSymbol);
+			if (cachedValue !== undefined) {
+				return cachedValue;
+			}
+
 			const symbolDeclarations = getDeclarationsForSymbol(nodeSymbol);
 			if (symbolDeclarations.some(isDeclarationFromExternals)) {
-				return VisibilityType.External;
+				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
 			if (isPrivateClassMember(nodeSymbol)) {
-				return VisibilityType.Private;
+				return putToCache(nodeSymbol, VisibilityType.Private);
 			}
 
 			if (nodeSymbol.escapedName === 'prototype') {
 				// accessing to prototype
-				return VisibilityType.External;
+				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
 			if (fullOptions.publicJSDocTag.length !== 0) {
@@ -394,7 +406,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 					let currentNode: ts.Node = declaration;
 					while (!ts.isSourceFile(currentNode)) {
 						if (getNodeJSDocComment(currentNode).includes(`@${fullOptions.publicJSDocTag}`)) {
-							return VisibilityType.External;
+							return putToCache(nodeSymbol, VisibilityType.External);
 						}
 
 						currentNode = currentNode.parent;
@@ -406,13 +418,13 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			let symbol: TSSymbolInternal | undefined = nodeSymbol as TSSymbolInternal;
 			while (symbol !== undefined) {
 				if (exportsSymbolTree.isSymbolAccessibleFromExports(symbol)) {
-					return VisibilityType.External;
+					return putToCache(nodeSymbol, VisibilityType.External);
 				}
 
 				symbol = symbol.parent;
 			}
 
-			return VisibilityType.Internal;
+			return putToCache(nodeSymbol, VisibilityType.Internal);
 		}
 
 		function getShorthandObjectBindingElementSymbol(element: ts.BindingElement): ts.Symbol | null {
