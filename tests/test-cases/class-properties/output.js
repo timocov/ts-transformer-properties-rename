@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.totalDressing = exports.totalSalad = void 0;
 var TestProperties = /** @class */ (function () {
     function TestProperties() {
         this._private__salad = 0;
@@ -8,7 +9,7 @@ var TestProperties = /** @class */ (function () {
     Object.defineProperty(TestProperties.prototype, "_internal_salad", {
         get: function () { return this._private__salad; },
         set: function (val) { this._private__salad = val; },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     return TestProperties;

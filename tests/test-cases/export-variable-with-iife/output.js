@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.exportedVariable2 = exports.exportedVariable = void 0;
 var InternalClass = /** @class */ (function () {
     function InternalClass() {
         this.publicProperty = 1;

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getOptions = void 0;
 var internalOptions = { _internal_fooBar2: 12 };
 function shorthandBindingElement1() {
     var mixed = {
