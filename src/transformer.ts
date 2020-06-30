@@ -8,12 +8,8 @@ import {
 	isPrivateClassMember,
 	splitTransientSymbol,
 	getNodeJSDocComment,
+	isNodeNamedDeclaration,
 } from './typescript-helpers';
-
-// https://github.com/microsoft/TypeScript/issues/38344
-interface TSSymbolInternal extends ts.Symbol {
-	parent?: TSSymbolInternal;
-}
 
 export interface RenameOptions {
 	/**
@@ -267,7 +263,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			return symbol;
 		}
 
-		function getNodeSymbol(node: ts.Expression | ts.Identifier | ts.StringLiteral | ts.NamedDeclaration): ts.Symbol | null {
+		function getNodeSymbol(node: ts.Expression | ts.NamedDeclaration | ts.DeclarationName): ts.Symbol | null {
 			const symbol = typeChecker.getSymbolAtLocation(node);
 			if (symbol === undefined) {
 				return null;
@@ -379,6 +375,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			return getSymbolVisibilityType(symbol);
 		}
 
+		// tslint:disable-next-line:cyclomatic-complexity
 		function getSymbolVisibilityType(nodeSymbol: ts.Symbol): VisibilityType {
 			nodeSymbol = getActualSymbol(nodeSymbol);
 
@@ -414,14 +411,23 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				}
 			}
 
-			// if declaration is "exported" somehow
-			let symbol: TSSymbolInternal | undefined = nodeSymbol as TSSymbolInternal;
-			while (symbol !== undefined) {
-				if (exportsSymbolTree.isSymbolAccessibleFromExports(symbol)) {
-					return putToCache(nodeSymbol, VisibilityType.External);
+			if (exportsSymbolTree.isSymbolAccessibleFromExports(nodeSymbol)) {
+				return putToCache(nodeSymbol, VisibilityType.External)
+			}
+
+			for (const declaration of symbolDeclarations) {
+				if (!isNodeNamedDeclaration(declaration.parent) || declaration.parent.name === undefined) {
+					continue;
 				}
 
-				symbol = symbol.parent;
+				const parentSymbol = getNodeSymbol(declaration.parent.name);
+				if (parentSymbol === null) {
+					continue;
+				}
+
+				if (getSymbolVisibilityType(parentSymbol) === VisibilityType.External) {
+					return putToCache(nodeSymbol, VisibilityType.External);
+				}
 			}
 
 			return putToCache(nodeSymbol, VisibilityType.Internal);
