@@ -11,4 +11,5 @@ package-lock.json
 package-lock.json.*
 
 !.mocharc.js
+!scripts/clean-package-json.js
 !tests/test-cases/**/output.js
