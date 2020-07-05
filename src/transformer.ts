@@ -113,6 +113,11 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 					return handleClassMember(node);
 				}
 
+				// enum Enum { node }
+				if (ts.isEnumMember(node.parent) && node.parent.name === node) {
+					return handleEnumMember(node);
+				}
+
 				// const a = { node: 123 }
 				if (ts.isPropertyAssignment(node.parent) && node.parent.name === node) {
 					return handlePropertyAssignment(node);
@@ -178,6 +183,11 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 		// private node
 		// public node()
 		function handleClassMember(node: ts.Identifier): ts.Identifier {
+			return createNewIdentifier(node);
+		}
+
+		// enum Enum { node }
+		function handleEnumMember(node: ts.Identifier): ts.Identifier {
 			return createNewIdentifier(node);
 		}
 
