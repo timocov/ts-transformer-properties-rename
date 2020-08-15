@@ -3,12 +3,14 @@ import * as ts from 'typescript';
 import { ExportsSymbolTree } from './exports-symbol-tree';
 import {
 	getDeclarationsForSymbol,
+	getNodeJSDocComment,
 	isClassMember,
 	isConstructorParameter,
-	isPrivateClassMember,
-	splitTransientSymbol,
-	getNodeJSDocComment,
 	isNodeNamedDeclaration,
+	isPrivateClassMember,
+	isSymbolClassMember,
+	splitTransientSymbol,
+	getClassOfMemberSymbol,
 } from './typescript-helpers';
 
 export interface RenameOptions {
@@ -373,11 +375,13 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return VisibilityType.External;
 			}
 
-			if (isClassMember(node.parent) && isTypePropertyExternal(typeChecker.getTypeAtLocation(node.parent.parent), node.getText())) {
+			const nodeSymbol = getNodeSymbol(node);
+			const classOfMember = nodeSymbol !== null ? getClassOfMemberSymbol(nodeSymbol) : null;
+			if (classOfMember !== null && isTypePropertyExternal(typeChecker.getTypeAtLocation(classOfMember), node.getText())) {
 				return VisibilityType.External;
 			}
 
-			const symbol = ts.isBindingElement(node) ? getShorthandObjectBindingElementSymbol(node) : getNodeSymbol(node);
+			const symbol = ts.isBindingElement(node) ? getShorthandObjectBindingElementSymbol(node) : nodeSymbol;
 			if (symbol === null) {
 				return VisibilityType.External;
 			}
@@ -478,7 +482,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return false;
 			}
 
-			return isPrivateClassMember(typeChecker.getSymbolAtLocation(node));
+			return isSymbolClassMember(typeChecker.getSymbolAtLocation(node));
 		}
 
 		return (sourceFile: ts.SourceFile) => transformNodeAndChildren(sourceFile, context);

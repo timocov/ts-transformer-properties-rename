@@ -9,6 +9,7 @@ const namedDeclarationKinds = [
 	ts.SyntaxKind.FunctionDeclaration,
 	ts.SyntaxKind.VariableDeclaration,
 	ts.SyntaxKind.PropertySignature,
+	ts.SyntaxKind.Parameter,
 ];
 
 export function isNodeNamedDeclaration(node: ts.Node): node is ts.NamedDeclaration {
@@ -111,6 +112,21 @@ export function isClassMember(node: ts.Node): node is ClassMember {
 	return ts.isMethodDeclaration(node) || ts.isPropertyDeclaration(node) || ts.isGetAccessor(node) || ts.isSetAccessor(node);
 }
 
+export function getClassOfMemberSymbol(nodeSymbol: ts.Symbol): ts.ClassLikeDeclaration | ts.ObjectLiteralExpression | null {
+	const classMembers = getClassMemberDeclarations(nodeSymbol);
+	if (classMembers.length !== 0) {
+		// we need any member to get class' declaration
+		const classMember = classMembers[0];
+		if (isConstructorParameter(classMember)) {
+			return (classMember.parent as ts.ConstructorDeclaration).parent;
+		}
+
+		return classMember.parent;
+	}
+
+	return null;
+}
+
 export function hasPrivateKeyword(node: ClassMember | ts.ParameterDeclaration): boolean {
 	return hasModifier(node, ts.SyntaxKind.PrivateKeyword);
 }
@@ -129,15 +145,27 @@ export function isConstructorParameter(node: ts.Node): node is ts.ParameterDecla
 		);
 }
 
-export function isPrivateClassMember(symbol: ts.Symbol | undefined): boolean {
-	// for some reason ts.Symbol.declarations can be undefined (for example in order to accessing to proto member)
-	if (symbol === undefined || symbol.declarations === undefined) { // tslint:disable-line:strict-type-predicates
-		return false;
+function getClassMemberDeclarations(symbol: ts.Symbol | undefined): (ClassMember | ts.ParameterDeclaration)[] {
+	if (symbol === undefined) {
+		return [];
 	}
 
-	return symbol.declarations.some((x: ts.Declaration) => {
-		return (isClassMember(x) || isConstructorParameter(x)) && hasPrivateKeyword(x);
+	const declarations = symbol.getDeclarations();
+	if (declarations === undefined) {
+		return [];
+	}
+
+	return declarations.filter((x: ts.Declaration): x is (ClassMember | ts.ParameterDeclaration) => {
+		return isClassMember(x) || isConstructorParameter(x);
 	});
+}
+
+export function isSymbolClassMember(symbol: ts.Symbol | undefined): boolean {
+	return getClassMemberDeclarations(symbol).length !== 0;
+}
+
+export function isPrivateClassMember(symbol: ts.Symbol | undefined): boolean {
+	return getClassMemberDeclarations(symbol).some(hasPrivateKeyword);
 }
 
 export function getNodeJSDocComment(node: ts.Node): string {
