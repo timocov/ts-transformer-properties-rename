@@ -34,9 +34,16 @@ export class ExportsSymbolTree {
 
 		const typeChecker = this.program.getTypeChecker();
 		for (const filePath of entrySourceFiles) {
-			const entrySourceFile = typeChecker.getSymbolAtLocation(this.program.getSourceFile(filePath) as ts.SourceFile);
+			const sourceFile = this.program.getSourceFile(filePath);
+			if (sourceFile === undefined) {
+				throw new Error(`Cannot find source file ${filePath}`);
+			}
+
+			const entrySourceFile = typeChecker.getSymbolAtLocation(sourceFile);
 			if (entrySourceFile === undefined) {
-				throw new Error(`Cannot find symbol for source file ${filePath}`);
+				// if a source file doesn't have any export - then it doesn't have a symbol as well
+				// so just skip it here
+				continue;
 			}
 
 			for (const entryExportSymbol of getExportsForSourceFile(typeChecker, entrySourceFile)) {
