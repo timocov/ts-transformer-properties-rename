@@ -286,10 +286,20 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 		// tslint:disable-next-line:cyclomatic-complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
+			const symbol = type.getSymbol();
+
 			if (type.flags & ts.TypeFlags.Object) {
 				const objectType = type as ts.ObjectType;
 				// treat any tuple property as "external"
 				if (objectType.objectFlags & ts.ObjectFlags.Tuple) {
+					return true;
+				}
+
+				// because of we can't get where a property come from in mapped types
+				// let's check the whole its type explicitly
+				// thus let's treat any property of a mapped type as "external" if its parent type is external
+				// perhaps it would be awesome to handle exactly property we have, but ¯\_(ツ)_/¯
+				if ((objectType.objectFlags & ts.ObjectFlags.Mapped) && symbol !== undefined && getSymbolVisibilityType(symbol) === VisibilityType.External) {
 					return true;
 				}
 			}
@@ -301,7 +311,6 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				}
 			}
 
-			const symbol = type.getSymbol();
 			if (symbol !== undefined) {
 				const declarations = getDeclarationsForSymbol(symbol);
 				for (const declaration of declarations) {
