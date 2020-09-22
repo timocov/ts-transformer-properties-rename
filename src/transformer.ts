@@ -287,6 +287,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 		// tslint:disable-next-line:cyclomatic-complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
 			const symbol = type.getSymbol();
+			const propertySymbol = typeChecker.getPropertyOfType(type, typePropertyName);
 
 			if (type.flags & ts.TypeFlags.Object) {
 				const objectType = type as ts.ObjectType;
@@ -295,11 +296,13 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 					return true;
 				}
 
-				// because of we can't get where a property come from in mapped types
-				// let's check the whole its type explicitly
-				// thus let's treat any property of a mapped type as "external" if its parent type is external
+				// in case when we can't get where a property come from in mapped types
+				// let's check the whole type explicitly
+				// thus in case of when property doesn't have a declaration let's treat any property of a mapped type as "external" if its parent type is external
+				// e.g. Readonly<Foo>.field will look for `field` in _Foo_ type (not in Readonly<Foo>), but { [K in 'foo' | 'bar']: any } won't
 				// perhaps it would be awesome to handle exactly property we have, but ¯\_(ツ)_/¯
-				if ((objectType.objectFlags & ts.ObjectFlags.Mapped) && symbol !== undefined && getSymbolVisibilityType(symbol) === VisibilityType.External) {
+				const propertyHasDeclarations = propertySymbol !== undefined ? getDeclarationsForSymbol(propertySymbol).length !== 0 : false;
+				if ((objectType.objectFlags & ts.ObjectFlags.Mapped) && symbol !== undefined && !propertyHasDeclarations && getSymbolVisibilityType(symbol) === VisibilityType.External) {
 					return true;
 				}
 			}
@@ -328,7 +331,6 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				}
 			}
 
-			const propertySymbol = typeChecker.getPropertyOfType(type, typePropertyName);
 			if (propertySymbol === undefined) {
 				return false;
 			}
