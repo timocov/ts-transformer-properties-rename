@@ -296,6 +296,13 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 					return true;
 				}
 
+				if (objectType.objectFlags & ts.ObjectFlags.Reference) {
+					const target = (objectType as ts.TypeReference).target;
+					if (target !== objectType && isTypePropertyExternal(target, typePropertyName)) {
+						return true;
+					}
+				}
+
 				// in case when we can't get where a property come from in mapped types
 				// let's check the whole type explicitly
 				// thus in case of when property doesn't have a declaration let's treat any property of a mapped type as "external" if its parent type is external
