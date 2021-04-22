@@ -253,7 +253,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				throw new Error(`Cannot get symbol for node "${oldProperty.getText()}"`);
 			}
 
-			const oldPropertyName = symbol.escapedName as string;
+			const oldPropertyName = ts.unescapeLeadingUnderscores(symbol.escapedName);
 
 			return createNewNode(oldPropertyName, type, createNode);
 		}
