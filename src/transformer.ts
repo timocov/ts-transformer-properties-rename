@@ -289,6 +289,10 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			const symbol = type.getSymbol();
 			const propertySymbol = typeChecker.getPropertyOfType(type, typePropertyName);
 
+			if (type.flags & ts.TypeFlags.IndexedAccess) {
+				return isTypePropertyExternal(typeChecker.getApparentType(type), typePropertyName);
+			}
+
 			if (type.flags & ts.TypeFlags.Object) {
 				const objectType = type as ts.ObjectType;
 				// treat any tuple property as "external"
