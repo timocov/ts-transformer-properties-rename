@@ -121,7 +121,8 @@ export function getClassOfMemberSymbol(nodeSymbol: ts.Symbol): ts.ClassLikeDecla
 			return (classMember.parent as ts.ConstructorDeclaration).parent;
 		}
 
-		return classMember.parent;
+		// we're sure that it is a class, not interface
+		return classMember.parent as ts.ClassLikeDeclaration | ts.ObjectLiteralExpression;
 	}
 
 	return null;
