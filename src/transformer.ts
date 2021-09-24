@@ -286,12 +286,17 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 		// tslint:disable-next-line:cyclomatic-complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
-			const symbol = type.getSymbol();
-			const propertySymbol = typeChecker.getPropertyOfType(type, typePropertyName);
+			// if a type is unknown or any - they should be interpret as a public ones
+			if (type.flags & ts.TypeFlags.Unknown || type.flags & ts.TypeFlags.Any) {
+				return true;
+			}
 
 			if (type.flags & ts.TypeFlags.IndexedAccess) {
 				return isTypePropertyExternal(typeChecker.getApparentType(type), typePropertyName);
 			}
+
+			const symbol = type.getSymbol();
+			const propertySymbol = typeChecker.getPropertyOfType(type, typePropertyName);
 
 			if (type.flags & ts.TypeFlags.Object) {
 				const objectType = type as ts.ObjectType;
