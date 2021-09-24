@@ -1,6 +1,7 @@
 export interface Interface {
 	publicMethod(opts: Options, b: number): void;
 	publicProperty: number;
+	get publicGetter(): string;
 }
 
 export interface Options {
@@ -17,10 +18,14 @@ class Class implements Interface {
 			foo: 321,
 		};
 
-		this.privateMethod(this.publicProperty, opts1.foo);
+		this.privateMethod(this.publicProperty, this.publicGetter, opts1.foo);
 	}
 
-	private privateMethod(a: string | number, b?: number): void { }
+	public get publicGetter(): string {
+		return '123';
+	}
+
+	private privateMethod(a: string | number, c: string, b?: number): void { }
 }
 
 export function createClass(): Interface {

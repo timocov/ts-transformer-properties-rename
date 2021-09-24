@@ -10,9 +10,16 @@ var Class = /** @class */ (function () {
         var opts1 = {
             foo: 321,
         };
-        this._private_privateMethod(this.publicProperty, opts1.foo);
+        this._private_privateMethod(this.publicProperty, this.publicGetter, opts1.foo);
     };
-    Class.prototype._private_privateMethod = function (a, b) { };
+    Object.defineProperty(Class.prototype, "publicGetter", {
+        get: function () {
+            return '123';
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Class.prototype._private_privateMethod = function (a, c, b) { };
     return Class;
 }());
 function createClass() {
