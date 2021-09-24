@@ -16,8 +16,8 @@ function func(obj1: PublicInterface, obj2: InternalInterface, obj3: PublicByJSDo
 }
 
 function func2(): any {
-	const b = { value: 321 } as any;
-	const c = { field: 222 } as any as InternalInterface;
+	const b = (({ value: 321 }) as any);
+	const c = (({ field: 222 }) as any) as InternalInterface;
 	return {
 		foo: 1,
 		bar: b,

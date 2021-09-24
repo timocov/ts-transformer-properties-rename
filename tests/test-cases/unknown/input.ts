@@ -3,8 +3,8 @@ interface InternalInterface {
 }
 
 function func(): unknown {
-	const b = { value: 321 } as unknown;
-	const c = { int: 222 } as unknown as InternalInterface;
+	const b = (({ value: 321 }) as unknown);
+	const c = (({ int: 222 }) as unknown) as InternalInterface;
 
 	return {
 		foo: 1,
