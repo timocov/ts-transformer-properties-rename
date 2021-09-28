@@ -5,7 +5,7 @@ function func(obj1, obj2, obj3) {
 }
 function func2() {
     var b = ({ value: 321 });
-    var c = ({ _internal_field: 222 });
+    var c = (((((({ _internal_field: 222 }))))));
     return {
         foo: 1,
         bar: b,

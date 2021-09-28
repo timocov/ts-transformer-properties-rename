@@ -358,7 +358,21 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 		// tslint:disable-next-line:cyclomatic-complexity
 		function getNodeVisibilityType(node: ts.Expression | ts.Identifier | ts.StringLiteral | ts.BindingElement): VisibilityType {
 			if (ts.isPropertyAssignment(node.parent) || ts.isShorthandPropertyAssignment(node.parent)) {
-				const type = typeChecker.getContextualType(node.parent.parent);
+				let expressionToGetTypeFrom: ts.Expression = node.parent.parent;
+				let lastKnownExpression: ts.AsExpression | ts.ObjectLiteralExpression = node.parent.parent;
+				let currentNode: ts.Node = node.parent.parent.parent;
+
+				while (ts.isParenthesizedExpression(currentNode) || ts.isAsExpression(currentNode)) {
+					if (ts.isAsExpression(currentNode)) {
+						expressionToGetTypeFrom = lastKnownExpression;
+						lastKnownExpression = currentNode;
+					}
+
+					currentNode = currentNode.parent;
+				}
+
+				// to get correct contextual type we need to provide the previous last expression rather than the last one
+				const type = typeChecker.getContextualType(expressionToGetTypeFrom);
 				if (type !== undefined && isTypePropertyExternal(type, node.getText())) {
 					return VisibilityType.External;
 				}
