@@ -437,10 +437,19 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			}
 
 			if (exportsSymbolTree.isSymbolAccessibleFromExports(nodeSymbol)) {
-				return putToCache(nodeSymbol, VisibilityType.External)
+				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
 			for (const declaration of symbolDeclarations) {
+				if (ts.isObjectLiteralExpression(declaration.parent)) {
+					// most likely this is unnamed object/type
+					// and the best we can do is try to find a symbol for this type in publicly accessible symbols
+					const typeSymbol = typeChecker.getTypeAtLocation(declaration.parent).symbol;
+					if (exportsSymbolTree.isSymbolAccessibleFromExports(typeSymbol)) {
+						return putToCache(nodeSymbol, VisibilityType.External)
+					}
+				}
+
 				if (!isNodeNamedDeclaration(declaration.parent) || declaration.parent.name === undefined) {
 					continue;
 				}
