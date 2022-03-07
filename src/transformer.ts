@@ -43,6 +43,14 @@ export interface RenameOptions {
 	 * @example ''
 	 */
 	publicJSDocTag: string;
+
+	/**
+	 * Allow exclusion for renames
+	 * @example /^_pub/
+	 * @example [ 'class', 'public' ]
+	 * @example ((name)=>{name.match(/^_pub/) })
+	 */
+	exclusionPattern: RegExp | string[] | ((name: string) => boolean);
 }
 
 const defaultOptions: RenameOptions = {
@@ -50,6 +58,7 @@ const defaultOptions: RenameOptions = {
 	privatePrefix: '_private_',
 	internalPrefix: '_internal_',
 	publicJSDocTag: 'public',
+	exclusionPattern: (() => false),
 };
 
 const enum VisibilityType {
@@ -286,6 +295,23 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 		// tslint:disable-next-line:cyclomatic-complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
+
+			if (fullOptions.exclusionPattern  instanceof RegExp) {
+				// test exclusion by pattern
+				if (typePropertyName.match(fullOptions.exclusionPattern))
+					return true;
+			} else if (fullOptions.exclusionPattern instanceof Object && Array.isArray(fullOptions.exclusionPattern)) {
+				// test exclusion by list
+				if (fullOptions.exclusionPattern.indexOf(typePropertyName) !== -1) {
+					return true;
+				}
+			} else if (fullOptions.exclusionPattern instanceof Function) {
+				// test exclusion by function
+				if (fullOptions.exclusionPattern(typePropertyName)) {
+					return true;
+				}
+			}
+
 			// if a type is unknown or any - they should be interpret as a public ones
 			if (type.flags & ts.TypeFlags.Unknown || type.flags & ts.TypeFlags.Any) {
 				return true;

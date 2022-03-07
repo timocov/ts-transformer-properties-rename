@@ -225,6 +225,21 @@ const colors: Record<string, string> = {
 // ...
 ```
 
+### exclusionPattern
+
+*Default: `(()=>false)`*
+
+Allows exclusion using a pattern, a string array, or a function.
+
+Examples:
+```
+exceptionList: [ 'class', 'x', 'y']
+exceptionList: /^_pub/
+exceptionList: (name)=>[ 'class', 'x', 'y'].indexOf(name) !== -1
+
+```
+
+
 ## How to use the custom transformer
 
 Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (see <https://github.com/Microsoft/TypeScript/issues/14419>).
