@@ -85,6 +85,7 @@ export class ExportsSymbolTree {
 			return;
 		}
 
+		// eslint-disable-next-line deprecation/deprecation
 		if (node.kind === ts.SyntaxKind.JSDocComment || ts.isBlock(node)) {
 			return;
 		}

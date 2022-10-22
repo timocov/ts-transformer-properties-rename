@@ -7,8 +7,22 @@ on:
   pull_request:
 
 jobs:
-  main:
-    name: Compile, Lint and Test
+  minimal:
+    name: Test minimal
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 14
+    - run: npm install
+    - run: npm install typescript@4.3.5
+    - run: npm run build
+    - run: npm run test
+
+  latest:
+    name: Test and lint latest
     runs-on: ubuntu-latest
 
     steps:
@@ -18,5 +32,19 @@ jobs:
         node-version: 14
     - run: npm install
     - run: npm run lint
+    - run: npm run build
+    - run: npm run test
+
+  next:
+    name: Test next
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 14
+    - run: npm install
+    - run: npm install typescript@next
     - run: npm run build
     - run: npm run test

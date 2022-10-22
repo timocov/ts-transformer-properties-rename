@@ -1,0 +1,7 @@
+/lib/**
+/dist/**
+
+**/node_modules
+
+/tests/test-cases/**/*.ts
+/tests/test-cases/**/output.js

@@ -43,12 +43,12 @@ export function splitTransientSymbol(symbol: ts.Symbol, typeChecker: ts.TypeChec
 			continue;
 		}
 
-		const symbol = typeChecker.getSymbolAtLocation(declaration.name);
-		if (symbol === undefined) {
+		const sym = typeChecker.getSymbolAtLocation(declaration.name);
+		if (sym === undefined) {
 			continue;
 		}
 
-		result.push(getActualSymbol(symbol, typeChecker));
+		result.push(getActualSymbol(sym, typeChecker));
 	}
 
 	return result;
@@ -57,14 +57,10 @@ export function splitTransientSymbol(symbol: ts.Symbol, typeChecker: ts.TypeChec
 export function getDeclarationsForSymbol(symbol: ts.Symbol): ts.Declaration[] {
 	const result: ts.Declaration[] = [];
 
-	// Disabling tslint is for backward compat with TypeScript < 3
-	// tslint:disable-next-line:strict-type-predicates
 	if (symbol.declarations !== undefined) {
 		result.push(...symbol.declarations);
 	}
 
-	// Disabling tslint is for backward compat with TypeScript < 3
-	// tslint:disable-next-line:strict-type-predicates
 	if (symbol.valueDeclaration !== undefined) {
 		// push valueDeclaration might be already in declarations array
 		// so let's check first to avoid duplication nodes
@@ -112,7 +108,7 @@ export function isClassMember(node: ts.Node): node is ClassMember {
 	return ts.isMethodDeclaration(node) || ts.isPropertyDeclaration(node) || ts.isGetAccessor(node) || ts.isSetAccessor(node);
 }
 
-export function getClassOfMemberSymbol(nodeSymbol: ts.Symbol): ts.ClassLikeDeclaration | ts.ObjectLiteralExpression | null {
+export function getClassOfMemberSymbol(nodeSymbol: ts.Symbol): ts.ClassLikeDeclaration | ts.ObjectLiteralExpression | ts.TypeLiteralNode | ts.InterfaceDeclaration | null {
 	const classMembers = getClassMemberDeclarations(nodeSymbol);
 	if (classMembers.length !== 0) {
 		// we need any member to get class' declaration
@@ -132,8 +128,21 @@ export function hasPrivateKeyword(node: ClassMember | ts.ParameterDeclaration): 
 	return hasModifier(node, ts.SyntaxKind.PrivateKeyword);
 }
 
+function getModifiers(node: ts.Node): readonly NonNullable<ts.Node['modifiers']>[number][] {
+	if (isBreakingTypeScriptApi(ts)) {
+		if (!ts.canHaveModifiers(node)) {
+			return [];
+		}
+
+		return ts.getModifiers(node) || [];
+	}
+
+	// eslint-disable-next-line deprecation/deprecation
+	return node.modifiers || [];
+}
+
 export function hasModifier(node: ts.Node, modifier: ts.SyntaxKind): boolean {
-	return node.modifiers !== undefined && node.modifiers.some((mod: ts.Modifier) => mod.kind === modifier);
+	return getModifiers(node).some(mod => mod.kind === modifier);
 }
 
 export function isConstructorParameter(node: ts.Node): node is ts.ParameterDeclaration {
@@ -173,4 +182,16 @@ export function getNodeJSDocComment(node: ts.Node): string {
 	const start = node.getStart();
 	const jsDocStart = node.getStart(undefined, true);
 	return node.getSourceFile().getFullText().substring(jsDocStart, start).trim();
+}
+
+// decorators and modifiers-related api added in ts 4.8
+interface BreakingTypeScriptApi {
+	canHaveDecorators(node: ts.Node): boolean;
+	getDecorators(node: ts.Node): readonly ts.Decorator[] | undefined;
+	canHaveModifiers(node: ts.Node): boolean;
+	getModifiers(node: ts.Node): readonly ts.Modifier[] | undefined;
+}
+
+function isBreakingTypeScriptApi(compiler: unknown): compiler is BreakingTypeScriptApi {
+	return 'canHaveDecorators' in ts;
 }

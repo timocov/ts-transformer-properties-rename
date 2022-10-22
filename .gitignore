@@ -10,6 +10,7 @@ node_modules/
 package-lock.json
 package-lock.json.*
 
+!.eslintrc.js
 !.mocharc.js
 !scripts/clean-package-json.js
 !tests/test-cases/**/output.js

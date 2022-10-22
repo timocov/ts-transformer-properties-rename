@@ -58,7 +58,7 @@ const enum VisibilityType {
 	External,
 }
 
-// tslint:disable-next-line:no-default-export
+// eslint-disable-next-line import/no-default-export
 export default function propertiesRenameTransformer(program: ts.Program, config?: Partial<RenameOptions>): ts.TransformerFactory<ts.SourceFile> {
 	return createTransformerFactory(program, config);
 }
@@ -76,17 +76,17 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 	}
 
 	return (context: ts.TransformationContext) => {
-		function transformNodeAndChildren(node: ts.SourceFile, context: ts.TransformationContext): ts.SourceFile;
-		function transformNodeAndChildren(node: ts.Node, context: ts.TransformationContext): ts.Node;
-		function transformNodeAndChildren(node: ts.Node, context: ts.TransformationContext): ts.Node {
+		function transformNodeAndChildren(node: ts.SourceFile, ctx: ts.TransformationContext): ts.SourceFile;
+		function transformNodeAndChildren(node: ts.Node, ctx: ts.TransformationContext): ts.Node;
+		function transformNodeAndChildren(node: ts.Node, ctx: ts.TransformationContext): ts.Node {
 			return ts.visitEachChild(
 				transformNode(node),
-				(childNode: ts.Node) => transformNodeAndChildren(childNode, context),
-				context
+				(childNode: ts.Node) => transformNodeAndChildren(childNode, ctx),
+				ctx
 			);
 		}
 
-		// tslint:disable-next-line:cyclomatic-complexity
+		// eslint-disable-next-line complexity
 		function transformNode(node: ts.Node): ts.Node {
 			// const a = { node }
 			if (ts.isShorthandPropertyAssignment(node)) {
@@ -164,7 +164,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return node;
 			}
 
-			return createNewNode(propertyName, VisibilityType.Internal, ts.createStringLiteral);
+			return createNewNode(propertyName, VisibilityType.Internal, context.factory.createStringLiteral);
 		}
 
 		// obj.node
@@ -179,7 +179,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return node;
 			}
 
-			return createNewNodeFromProperty(node, visibilityType, ts.createStringLiteral);
+			return createNewNodeFromProperty(node, visibilityType, context.factory.createStringLiteral);
 		}
 
 		// private node
@@ -211,7 +211,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			}
 
 			return createNewNodeFromProperty(node.name, visibilityType, (newName: string) => {
-				return ts.createPropertyAssignment(newName, node.name);
+				return context.factory.createPropertyAssignment(newName, node.name);
 			});
 		}
 
@@ -227,7 +227,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			}
 
 			return createNewNodeFromProperty(node.name, visibilityType, (newName: string) => {
-				return ts.createBindingElement(node.dotDotDotToken, newName, node.name, node.initializer);
+				return context.factory.createBindingElement(node.dotDotDotToken, newName, node.name, node.initializer);
 			});
 		}
 
@@ -244,7 +244,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return oldIdentifier;
 			}
 
-			return createNewNodeFromProperty(oldIdentifier, visibilityType, ts.createIdentifier);
+			return createNewNodeFromProperty(oldIdentifier, visibilityType, context.factory.createIdentifier);
 		}
 
 		function createNewNodeFromProperty<T extends ts.Node>(oldProperty: ts.PropertyName, type: VisibilityType, createNode: (newName: string) => T): T {
@@ -284,7 +284,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			return getActualSymbol(symbol);
 		}
 
-		// tslint:disable-next-line:cyclomatic-complexity
+		// eslint-disable-next-line complexity
 		function isTypePropertyExternal(type: ts.Type, typePropertyName: string): boolean {
 			// if a type is unknown or any - they should be interpret as a public ones
 			if (type.flags & ts.TypeFlags.Unknown || type.flags & ts.TypeFlags.Any) {
@@ -355,7 +355,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				.some((sym: ts.Symbol) => getSymbolVisibilityType(sym) === VisibilityType.External);
 		}
 
-		// tslint:disable-next-line:cyclomatic-complexity
+		// eslint-disable-next-line complexity
 		function getNodeVisibilityType(node: ts.Expression | ts.Identifier | ts.StringLiteral | ts.BindingElement): VisibilityType {
 			if (ts.isPropertyAssignment(node.parent) || ts.isShorthandPropertyAssignment(node.parent)) {
 				let expressionToGetTypeFrom: ts.Expression = node.parent.parent;
@@ -430,7 +430,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			return getSymbolVisibilityType(symbol);
 		}
 
-		// tslint:disable-next-line:cyclomatic-complexity
+		// eslint-disable-next-line complexity
 		function getSymbolVisibilityType(nodeSymbol: ts.Symbol): VisibilityType {
 			nodeSymbol = getActualSymbol(nodeSymbol);
 
@@ -467,7 +467,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			}
 
 			if (exportsSymbolTree.isSymbolAccessibleFromExports(nodeSymbol)) {
-				return putToCache(nodeSymbol, VisibilityType.External)
+				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
 			for (const declaration of symbolDeclarations) {
@@ -515,7 +515,7 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			// all declarations from declaration source files are external by default
 			return sourceFile.isDeclarationFile
 				|| program.isSourceFileDefaultLibrary(sourceFile)
-				|| /[\\\/]node_modules[\\\/]/.test(sourceFile.fileName);
+				|| /[\\/]node_modules[\\/]/.test(sourceFile.fileName);
 		}
 
 		function isConstructorParameterReference(node: ts.Node): node is ts.Identifier {
