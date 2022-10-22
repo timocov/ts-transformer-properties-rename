@@ -145,6 +145,23 @@ export function hasModifier(node: ts.Node, modifier: ts.SyntaxKind): boolean {
 	return getModifiers(node).some(mod => mod.kind === modifier);
 }
 
+function getDecorators(node: ts.Node): readonly unknown[] {
+	if (isBreakingTypeScriptApi(ts)) {
+		if (!ts.canHaveDecorators(node)) {
+			return [];
+		}
+
+		return ts.getDecorators(node) || [];
+	}
+
+	// eslint-disable-next-line deprecation/deprecation
+	return node.decorators || [];
+}
+
+export function hasDecorators(node: ts.Node): boolean {
+	return getDecorators(node).length !== 0;
+}
+
 export function isConstructorParameter(node: ts.Node): node is ts.ParameterDeclaration {
 	return ts.isParameter(node) &&
 		ts.isConstructorDeclaration(node.parent as ts.Node) &&

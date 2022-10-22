@@ -74,6 +74,7 @@ describe(`Functional tests for typescript v${ts.versionMajorMinor}`, () => {
 			const program = ts.createProgram({
 				rootNames: [testCase.inputFileName],
 				options: {
+					experimentalDecorators: true,
 					target: ts.ScriptTarget.ES5,
 				},
 			});
@@ -89,6 +90,7 @@ describe(`Functional tests for typescript v${ts.versionMajorMinor}`, () => {
 					privatePrefix: '_private_',
 					internalPrefix: '_internal_',
 					publicJSDocTag: 'public',
+					ignoreDecorated: true,
 				}
 			);
 

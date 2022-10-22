@@ -1,0 +1,7 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"noUnusedLocals": false,
+		"experimentalDecorators": true
+	}
+}

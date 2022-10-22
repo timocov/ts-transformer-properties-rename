@@ -225,6 +225,13 @@ const colors: Record<string, string> = {
 // ...
 ```
 
+### ignoreDecorated
+
+*Default: `false`*
+
+Whether fields that were decorated should be renamed.
+A field is treated as "decorated" if itself or any its parent (on type level) has a decorator.
+
 ## How to use the custom transformer
 
 Unfortunately, TypeScript itself does not currently provide any easy way to use custom transformers (see <https://github.com/Microsoft/TypeScript/issues/14419>).

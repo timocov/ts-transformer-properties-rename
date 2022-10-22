@@ -11,6 +11,7 @@ import {
 	isSymbolClassMember,
 	splitTransientSymbol,
 	getClassOfMemberSymbol,
+	hasDecorators,
 } from './typescript-helpers';
 
 export interface RenameOptions {
@@ -43,6 +44,12 @@ export interface RenameOptions {
 	 * @example ''
 	 */
 	publicJSDocTag: string;
+
+	/**
+	 * Whether fields that were decorated should be renamed.
+	 * A field is treated as "decorated" if itself or any its parent (on type level) has a decorator.
+	 */
+	ignoreDecorated: boolean;
 }
 
 const defaultOptions: RenameOptions = {
@@ -50,6 +57,7 @@ const defaultOptions: RenameOptions = {
 	privatePrefix: '_private_',
 	internalPrefix: '_internal_',
 	publicJSDocTag: 'public',
+	ignoreDecorated: false,
 };
 
 const enum VisibilityType {
@@ -444,26 +452,32 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
-			if (isPrivateClassMember(nodeSymbol)) {
-				return putToCache(nodeSymbol, VisibilityType.Private);
-			}
-
 			if (nodeSymbol.escapedName === 'prototype') {
 				// accessing to prototype
 				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
-			if (fullOptions.publicJSDocTag.length !== 0) {
+			if (fullOptions.publicJSDocTag.length !== 0 || fullOptions.ignoreDecorated) {
 				for (const declaration of symbolDeclarations) {
 					let currentNode: ts.Node = declaration;
 					while (!ts.isSourceFile(currentNode)) {
-						if (getNodeJSDocComment(currentNode).includes(`@${fullOptions.publicJSDocTag}`)) {
+						if (fullOptions.publicJSDocTag.length !== 0
+							&& getNodeJSDocComment(currentNode).includes(`@${fullOptions.publicJSDocTag}`)
+						) {
+							return putToCache(nodeSymbol, VisibilityType.External);
+						}
+
+						if (fullOptions.ignoreDecorated && hasDecorators(currentNode)) {
 							return putToCache(nodeSymbol, VisibilityType.External);
 						}
 
 						currentNode = currentNode.parent;
 					}
 				}
+			}
+
+			if (isPrivateClassMember(nodeSymbol)) {
+				return putToCache(nodeSymbol, VisibilityType.Private);
 			}
 
 			if (exportsSymbolTree.isSymbolAccessibleFromExports(nodeSymbol)) {
