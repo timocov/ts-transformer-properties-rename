@@ -209,6 +209,6 @@ interface BreakingTypeScriptApi {
 	getModifiers(node: ts.Node): readonly ts.Modifier[] | undefined;
 }
 
-function isBreakingTypeScriptApi(compiler: unknown): compiler is BreakingTypeScriptApi {
-	return 'canHaveDecorators' in ts;
+function isBreakingTypeScriptApi(compiler: object): compiler is BreakingTypeScriptApi {
+	return 'canHaveDecorators' in compiler;
 }

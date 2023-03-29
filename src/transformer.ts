@@ -12,6 +12,7 @@ import {
 	splitTransientSymbol,
 	getClassOfMemberSymbol,
 	hasDecorators,
+	hasModifier,
 } from './typescript-helpers';
 
 export interface RenameOptions {
@@ -449,6 +450,10 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 			const symbolDeclarations = getDeclarationsForSymbol(nodeSymbol);
 			if (symbolDeclarations.some(isDeclarationFromExternals)) {
+				return putToCache(nodeSymbol, VisibilityType.External);
+			}
+
+			if (symbolDeclarations.some((decl: ts.Declaration) => hasModifier(decl, ts.SyntaxKind.DeclareKeyword))) {
 				return putToCache(nodeSymbol, VisibilityType.External);
 			}
 
