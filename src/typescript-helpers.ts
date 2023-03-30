@@ -128,6 +128,8 @@ export function hasPrivateKeyword(node: ClassMember | ts.ParameterDeclaration): 
 	return hasModifier(node, ts.SyntaxKind.PrivateKeyword);
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 function getModifiers(node: ts.Node): readonly NonNullable<ts.Node['modifiers']>[number][] {
 	if (isBreakingTypeScriptApi(ts)) {
 		if (!ts.canHaveModifiers(node)) {
@@ -137,6 +139,8 @@ function getModifiers(node: ts.Node): readonly NonNullable<ts.Node['modifiers']>
 		return ts.getModifiers(node) || [];
 	}
 
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	// eslint-disable-next-line deprecation/deprecation
 	return node.modifiers || [];
 }
@@ -154,6 +158,8 @@ function getDecorators(node: ts.Node): readonly unknown[] {
 		return ts.getDecorators(node) || [];
 	}
 
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	// eslint-disable-next-line deprecation/deprecation
 	return node.decorators || [];
 }
