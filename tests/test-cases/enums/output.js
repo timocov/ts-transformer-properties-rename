@@ -12,4 +12,4 @@ console.log(TestEnum["_internal_Test2"]);
 var ExportedEnum;
 (function (ExportedEnum) {
     ExportedEnum[ExportedEnum["Foo"] = 0] = "Foo";
-})(ExportedEnum = exports.ExportedEnum || (exports.ExportedEnum = {}));
+})(ExportedEnum || (exports.ExportedEnum = ExportedEnum = {}));

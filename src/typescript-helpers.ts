@@ -141,11 +141,12 @@ function getModifiers(node: ts.Node): readonly NonNullable<ts.Node['modifiers']>
 
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	// eslint-disable-next-line deprecation/deprecation
+	// eslint-disable-next-line deprecation/deprecation, @typescript-eslint/no-unsafe-return
 	return node.modifiers || [];
 }
 
 export function hasModifier(node: ts.Node, modifier: ts.SyntaxKind): boolean {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	return getModifiers(node).some(mod => mod.kind === modifier);
 }
 
@@ -160,7 +161,7 @@ function getDecorators(node: ts.Node): readonly unknown[] {
 
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	// eslint-disable-next-line deprecation/deprecation
+	// eslint-disable-next-line deprecation/deprecation, @typescript-eslint/no-unsafe-return
 	return node.decorators || [];
 }
 

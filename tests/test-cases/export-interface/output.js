@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createClass = void 0;
+exports.createClass = createClass;
 var Class = /** @class */ (function () {
     function Class() {
         this.publicProperty = 123;
@@ -25,4 +25,3 @@ var Class = /** @class */ (function () {
 function createClass() {
     return new Class();
 }
-exports.createClass = createClass;

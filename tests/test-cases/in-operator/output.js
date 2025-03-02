@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.func = void 0;
+exports.func = func;
 function func(type) {
     if ('isAnother' in type) {
         console.log(type.bar);
@@ -19,4 +19,3 @@ function func(type) {
         console.log('check');
     }
 }
-exports.func = func;

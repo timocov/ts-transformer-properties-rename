@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getColor = void 0;
+exports.getColor = getColor;
 /** @public */
 var myColors = {
     foo: 'red',
@@ -9,4 +9,3 @@ var myColors = {
 function getColor(name) {
     return myColors[name];
 }
-exports.getColor = getColor;
