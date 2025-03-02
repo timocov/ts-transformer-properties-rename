@@ -139,6 +139,11 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 					return handleBindingElement(node);
 				}
 
+				// <Comp node={...} />
+				if (ts.isJsxAttribute(node.parent) && node.parent.name === node) {
+					return handleJsxAttributeName(node);
+				}
+
 				// constructor(public node: string) { // <--- this
 				//     console.log(node); // <--- and this
 				// }
@@ -204,6 +209,11 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 
 		// const { node: localName } = obj;
 		function handleBindingElement(node: ts.Identifier): ts.Identifier {
+			return createNewIdentifier(node);
+		}
+
+		// <Comp node={...} />
+		function handleJsxAttributeName(node: ts.Identifier): ts.Identifier {
 			return createNewIdentifier(node);
 		}
 
@@ -423,6 +433,17 @@ function createTransformerFactory(program: ts.Program, options?: Partial<RenameO
 			// const { node: propName } = obj;
 			if (ts.isBindingElement(node.parent) && isTypePropertyExternal(typeChecker.getTypeAtLocation(node.parent.parent), node.getText())) {
 				return VisibilityType.External;
+			}
+
+			// <Comp node={...} />
+			if (ts.isJsxAttribute(node.parent)) {
+				const jsxTagSymbol = typeChecker.getSymbolAtLocation(node.parent.parent.parent.tagName);
+				if (jsxTagSymbol !== undefined && jsxTagSymbol.valueDeclaration !== undefined) {
+					const jsxPropsType = typeChecker.getTypeOfSymbolAtLocation(jsxTagSymbol, jsxTagSymbol.valueDeclaration);
+					if (isTypePropertyExternal(jsxPropsType, node.getText())) {
+						return VisibilityType.External;
+					}
+				}
 			}
 
 			const nodeSymbol = getNodeSymbol(node);

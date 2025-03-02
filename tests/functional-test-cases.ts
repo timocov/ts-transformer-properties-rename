@@ -26,6 +26,20 @@ function prepareString(str: string): string {
 	return str.trim().replace(/\r\n/g, '\n');
 }
 
+function findInputFile(testCaseDir: string): string {
+	const tsFilePath = path.join(testCaseDir, 'input.ts');
+	if (fs.existsSync(tsFilePath)) {
+		return tsFilePath;
+	}
+
+	const tsxFilePath = path.join(testCaseDir, 'input.tsx');
+	if (fs.existsSync(tsxFilePath)) {
+		return tsxFilePath;
+	}
+
+	throw new Error(`Cannot find input file in ${testCaseDir}`);
+}
+
 function getTestCases(): TestCase[] {
 	if (!fs.existsSync(testCasesDir) || !fs.lstatSync(testCasesDir).isDirectory()) {
 		throw new Error(`${testCasesDir} folder does not exist`);
@@ -38,7 +52,7 @@ function getTestCases(): TestCase[] {
 		.map((directoryName: string) => {
 			const testCaseDir = path.resolve(testCasesDir, directoryName);
 			const outputFileName = path.resolve(testCaseDir, 'output.js');
-			const inputFileName = path.relative(process.cwd(), path.resolve(testCaseDir, 'input.ts'));
+			const inputFileName = path.relative(process.cwd(), findInputFile(testCaseDir));
 
 			assert(fs.existsSync(inputFileName), `Input file doesn't exist for ${directoryName}`);
 			assert(fs.existsSync(outputFileName), `Output file doesn't exist for ${directoryName}`);
