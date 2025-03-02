@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/timocov/ts-transformer-properties-rename",
   "peerDependencies": {
-    "typescript": ">=5.0.2"
+    "typescript": ">=5.5"
   },
   "devDependencies": {
     "@types/chai": "~5.0.1",

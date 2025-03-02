@@ -17,7 +17,7 @@ jobs:
       with:
         node-version: 22
     - run: npm install
-    - run: npm install typescript@5.0.2
+    - run: npm install typescript@5.5.2
     - run: npm run build
     - run: npm run test
 
